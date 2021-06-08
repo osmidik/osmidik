@@ -1,0 +1,52 @@
+!/usr/bin/env bash
+
+apt-get update
+
+apt install awscli
+Y
+
+aws configure
+
+cd /mnt
+parted /dev/sda --script mklabel gpt mkpart xfspart xfs 0% 100%
+mkfs.xfs -f /dev/sda1
+partprobe /dev/sda1
+mkdir /disk1
+mount /dev/sda1 /disk1 
+
+git clone https://github.com/Chia-Network/chia-blockchain.git -b latest --recurse-submodules
+cd chia-blockchain
+sh install.sh
+. ./activate
+chia init
+deactivate
+cd
+cd /mnt
+git clone https://github.com/swar/Swar-Chia-Plot-Manager.git
+cd Swar-Chia-Plot-Manager
+python3 -m venv venv
+. ./venv/bin/activate
+pip install -r requirements.txt
+pip install -r requirements-notification.txt
+mv config.yaml.default config.yaml
+nano config.yaml
+
+cd /mnt/Swar-Chia-Plot-Manager
+
+. ./venv/bin/activate
+
+python3 manager.py start
+
+deactivate
+
+cd /mnt/disk1/
+mkdir plots
+cd /mnt/disk1/plots
+nano auto.sh
+chmod 777 auto.sh
+
+screen -S OTOGONDER
+./auto.sh
+
+
+sh auto.sh
